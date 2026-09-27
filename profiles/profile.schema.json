@@ -1,0 +1,252 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/eeg-spec/profile.schema.json",
+  "title": "ADS1299 EEG device profile",
+  "description": "Describes ONE physical device: one chip configuration, one board build, one firmware. Every field carries its provenance, because the failure this schema exists to prevent is a number inferred from a datasheet and never measured. Two such numbers are known to be wrong in an existing implementation; see conformance/test_chip_invariants.py.",
+  "type": "object",
+  "required": [
+    "profile_id",
+    "chip",
+    "board",
+    "firmware"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "claim": {
+      "description": "A value plus how it came to be believed.",
+      "type": "object",
+      "required": [
+        "value",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {},
+        "unit": {
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "measured",
+            "closed-form",
+            "declared",
+            "unverified"
+          ],
+          "description": "measured = read off this hardware, with a procedure. closed-form = follows from a datasheet relation with no free parameter. declared = asserted by whoever built it, not independently checked. unverified = believed, provenance unknown -- anything depending on this field MUST refuse to run."
+        },
+        "procedure": {
+          "type": "string",
+          "description": "How it was measured, precisely enough to repeat. Required when provenance is 'measured'."
+        },
+        "measured_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "n": {
+          "description": "Sample size behind the measurement, where one applies."
+        },
+        "note": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provenance": {
+                "const": "measured"
+              }
+            },
+            "required": [
+              "provenance"
+            ]
+          },
+          "then": {
+            "required": [
+              "procedure",
+              "measured_on"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "profile_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$"
+    },
+    "description": {
+      "type": "string"
+    },
+    "chip": {
+      "description": "ADS1299 family behaviour. NOT configurable per board -- these follow from the part and its register settings.",
+      "type": "object",
+      "required": [
+        "model",
+        "lead_off_freq_divisor",
+        "decimation_response",
+        "lead_off_current_na",
+        "pga_gains_available"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": "string",
+          "enum": [
+            "ADS1299",
+            "ADS1299-4",
+            "ADS1299-6"
+          ]
+        },
+        "lead_off_freq_divisor": {
+          "$ref": "#/$defs/claim",
+          "description": "The impedance carrier sits at sample_rate / divisor. With FLEAD_OFF=11 the ADS1299 lead-off source runs at fDR/4, so the carrier TRACKS the sample rate. It is not a fixed physical frequency that aliases -- that model breaks the moment the rate changes, and it is wrong in at least one existing implementation."
+        },
+        "decimation_response": {
+          "$ref": "#/$defs/claim",
+          "description": "'sinc3' -- the ADS1299 digital decimation filter, sinc^3(f/fs). Rate-independent at f/fs, which is why the carrier attenuation is the same constant at every sample rate."
+        },
+        "lead_off_current_na": {
+          "$ref": "#/$defs/claim",
+          "description": "From ILEAD_OFF[1:0]. 24 nA for 01."
+        },
+        "pga_gains_available": {
+          "$ref": "#/$defs/claim"
+        },
+        "vref_v": {
+          "$ref": "#/$defs/claim"
+        }
+      }
+    },
+    "board": {
+      "description": "Per build. Every one of these MUST be measured on the board in question -- none can be inferred from the chip.",
+      "type": "object",
+      "required": [
+        "r_series_ohm",
+        "carrier_slope_uv_per_kohm",
+        "carrier_intercept_uv"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "r_series_ohm": {
+          "$ref": "#/$defs/claim",
+          "description": "Protection resistor per electrode. Trades ESD headroom against CMRR at roughly 1:1 in amplitude -- the common-mode leak scales linearly with it."
+        },
+        "carrier_slope_uv_per_kohm": {
+          "$ref": "#/$defs/claim",
+          "description": "Slope of carrier amplitude against total path impedance."
+        },
+        "carrier_intercept_uv": {
+          "$ref": "#/$defs/claim",
+          "description": "Additive intercept. The response is NOT through the origin. A single-point calibration forces it through zero and folds the intercept into the slope, which is measurably wrong at the far end of the impedance range. Requires a two-point resistor ladder."
+        },
+        "cm_dm_at_50hz_db": {
+          "$ref": "#/$defs/claim",
+          "description": "Common-mode to differential conversion. Scales with r_series_ohm."
+        },
+        "cm_dm_slope_db_per_decade": {
+          "$ref": "#/$defs/claim"
+        },
+        "analogue_pole_hz": {
+          "$ref": "#/$defs/claim",
+          "description": "Any single-pole roll-off beyond the chip's sinc^3, in absolute frequency. Board-dependent. Null if absent, but 'absent' is itself a measurement."
+        }
+      }
+    },
+    "firmware": {
+      "description": "Declared by whoever wrote the firmware, and verifiable against a known input. NOTHING here may be inferred from a register value alone.",
+      "type": "object",
+      "required": [
+        "sample_rate_hz",
+        "modes",
+        "interference_lines_hz"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sample_rate_hz": {
+          "$ref": "#/$defs/claim"
+        },
+        "modes": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "pga_gain",
+              "uv_scale_factor"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "pga_gain": {
+                "$ref": "#/$defs/claim"
+              },
+              "uv_scale_factor": {
+                "$ref": "#/$defs/claim",
+                "description": "Multiply CSV values by this to get true input-referred microvolts. THE CENTRAL TRAP: this is a property of the firmware's conversion, not of the PGA register. An implementation that infers this from the PGA gain can differ materially from what a matched-sine measurement on the same board reports. Declaring it from the register is how that happens. Verify with a known differential input before trusting it.",
+                "examples": [
+                  1.0
+                ]
+              },
+              "carrier_present": {
+                "$ref": "#/$defs/claim"
+              }
+            }
+          }
+        },
+        "interference_lines_hz": {
+          "$ref": "#/$defs/claim",
+          "description": "Explicit list of instrumental line frequencies in Hz. MUST NOT be derived from the sample rate. One such comb is a FIXED 25 Hz harmonic series locked to a clock, and expressing it as k*fs/20 happens to be right at one rate and wrong at every other."
+        },
+        "mains_hz": {
+          "$ref": "#/$defs/claim"
+        }
+      }
+    },
+    "montage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "channel_order": {
+          "$ref": "#/$defs/claim",
+          "description": "TRUE electrode positions in CSV column order. Header labels are not evidence -- headers have been observed listing electrode names in a different order from the physical channels. Readers must select POSITIONALLY."
+        }
+      }
+    },
+    "conventions": {
+      "description": "Choices that are neither chip nor board nor firmware, but which change every reported number if two implementations disagree. They are not derivable; they must be declared.",
+      "type": "object",
+      "required": [
+        "carrier_amplitude_convention"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "carrier_amplitude_convention": {
+          "$ref": "#/$defs/claim",
+          "description": "How a measured carrier peak-to-peak is converted before Ohm's law. 'sine_rms' = Vpp/(2*sqrt(2)), correct when the decimation filter has removed the square wave's harmonics and the carrier arrives near-sinusoidal. 'square_rms' = Vpp/2. 'legacy_sqrt2' = Vpp/sqrt(2), a convention found in older lab scripts that is twice the sine value -- it must be declared, never inherited silently, because every impedance it produces is off by that factor.",
+          "examples": [
+            "sine_rms",
+            "square_rms",
+            "legacy_sqrt2"
+          ]
+        },
+        "analysis_rate_hz": {
+          "$ref": "#/$defs/claim",
+          "description": "Target rate after decimation, if the chain decimates. Must divide the source rate by an integer. A value chosen because it happens to divide two particular source rates is a property of those devices, not of the method."
+        },
+        "band_edges_hz": {
+          "$ref": "#/$defs/claim",
+          "description": "Analysis band boundaries."
+        },
+        "epoch_seconds": {
+          "$ref": "#/$defs/claim",
+          "description": "Epoch length for rejection and spectral averaging."
+        },
+        "epoch_gates": {
+          "$ref": "#/$defs/claim",
+          "description": "Rejection thresholds, as an object. MUST come from here or an explicit configuration -- never a literal in code (R-40.12). A threshold tuned until the output looks reasonable has been fitted to the answer and carries no independent evidence; derive them from labelled artefact recordings, or declare them as conventions and say so."
+        }
+      }
+    }
+  }
+}

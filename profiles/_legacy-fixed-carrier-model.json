@@ -1,0 +1,107 @@
+{
+  "profile_id": "legacy-fixed-carrier-model",
+  "description": "NOT A DEVICE. This encodes the beliefs of a pre-spec implementation so the conformance suite can demonstrate what it catches. It must FAIL. Two beliefs are represented: that the impedance carrier is a fixed physical frequency rather than fs/4, and that the microvolt scale factor can be inferred from the PGA register. Both were observed in a working single-device implementation.",
+  "chip": {
+    "model": "ADS1299",
+    "lead_off_freq_divisor": {
+      "value": 4,
+      "provenance": "unverified",
+      "note": "The source implementation never states a divisor. It describes a fixed 125 Hz physical carrier 'appearing at 62.5 Hz in 250 sps as an alias of Nyquist'. That model and fs/4 agree at 500 sps and are made to agree at 250 sps, so the error is invisible on the only two rates ever used -- and wrong on any third."
+    },
+    "decimation_response": {
+      "value": "sinc3",
+      "provenance": "closed-form"
+    },
+    "lead_off_current_na": {
+      "value": 24.0,
+      "unit": "nA",
+      "provenance": "closed-form"
+    },
+    "pga_gains_available": {
+      "value": [
+        1,
+        2,
+        4,
+        6,
+        8,
+        12,
+        24
+      ],
+      "provenance": "closed-form"
+    }
+  },
+  "board": {
+    "r_series_ohm": {
+      "value": 47000,
+      "unit": "ohm",
+      "provenance": "declared"
+    },
+    "carrier_slope_uv_per_kohm": {
+      "value": 21.5,
+      "unit": "uV/kohm",
+      "provenance": "declared",
+      "note": "Single-point fit, forced through the origin."
+    },
+    "carrier_intercept_uv": {
+      "value": 0.0,
+      "unit": "uV",
+      "provenance": "unverified",
+      "note": "Never measured; assumed zero by the act of fitting one point."
+    }
+  },
+  "firmware": {
+    "sample_rate_hz": {
+      "value": 500,
+      "unit": "Hz",
+      "provenance": "declared"
+    },
+    "modes": {
+      "eeg": {
+        "pga_gain": {
+          "value": 12,
+          "provenance": "declared"
+        },
+        "uv_scale_factor": {
+          "value": 0.0833333,
+          "unit": "uV per CSV unit",
+          "provenance": "declared",
+          "note": "INFERRED FROM THE PGA REGISTER (1/12). A register setting describes the amplifier, not the firmware's conversion. Measuring it on hardware with a known differential input gives a materially different number."
+        }
+      },
+      "impedance": {
+        "pga_gain": {
+          "value": 1,
+          "provenance": "declared"
+        },
+        "uv_scale_factor": {
+          "value": 1.0,
+          "unit": "uV per CSV unit",
+          "provenance": "declared"
+        }
+      }
+    },
+    "interference_lines_hz": {
+      "value": [
+        25.0,
+        50.0,
+        75.0,
+        100.0
+      ],
+      "unit": "Hz",
+      "provenance": "unverified",
+      "note": "The source derives these as k*fs/20, which is right at 500 sps by coincidence and wrong at every other rate. The series is locked to a clock at a fixed frequency."
+    },
+    "mains_hz": {
+      "value": 50,
+      "unit": "Hz",
+      "provenance": "declared"
+    }
+  },
+  "conventions": {
+    "carrier_amplitude_convention": {
+      "value": "legacy_sqrt2",
+      "provenance": "unverified",
+      "note": "Inherited from older lab scripts and kept for continuity with archival measurements rather than chosen on physical grounds. It is twice the sine value, so every impedance it reports is twice what the sine convention would give. Continuity is a legitimate reason -- but it must be a declaration, not an inheritance."
+    }
+  }
+}

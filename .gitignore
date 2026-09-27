@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# The private overlay never enters this repository. Device-specific fitted constants,
+# clinical thresholds and any recording live outside it; conformance/check_publishable.py
+# fails the build if they appear here.
+private/
+*.csv
+*.edf
+*.npz
+
+# The pattern list names the very things it protects. It stays out of the repo.
+conformance/patterns.local.json

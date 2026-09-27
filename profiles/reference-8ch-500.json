@@ -1,0 +1,185 @@
+{
+  "profile_id": "reference-8ch-500",
+  "description": "SYNTHETIC reference device. No such board exists; the values are illustrative and chosen to exercise the schema. Board and firmware claims are 'declared' because there is no hardware to measure -- a real profile must replace them with 'measured' ones carrying procedures.",
+  "chip": {
+    "model": "ADS1299",
+    "lead_off_freq_divisor": {
+      "value": 4,
+      "unit": "dimensionless",
+      "provenance": "closed-form",
+      "note": "FLEAD_OFF[1:0]=11 selects fDR/4. The carrier tracks the sample rate; it is not a fixed physical frequency."
+    },
+    "decimation_response": {
+      "value": "sinc3",
+      "provenance": "closed-form",
+      "note": "Third-order sinc decimation, sinc^3(f/fs). A function of f/fs, so carrier attenuation is the same constant at every rate."
+    },
+    "lead_off_current_na": {
+      "value": 24.0,
+      "unit": "nA",
+      "provenance": "closed-form",
+      "note": "ILEAD_OFF[1:0]=01."
+    },
+    "pga_gains_available": {
+      "value": [
+        1,
+        2,
+        4,
+        6,
+        8,
+        12,
+        24
+      ],
+      "provenance": "closed-form"
+    },
+    "vref_v": {
+      "value": 4.5,
+      "unit": "V",
+      "provenance": "declared"
+    }
+  },
+  "board": {
+    "r_series_ohm": {
+      "value": 47000,
+      "unit": "ohm",
+      "provenance": "declared"
+    },
+    "carrier_slope_uv_per_kohm": {
+      "value": 20.0,
+      "unit": "uV/kohm",
+      "provenance": "declared",
+      "note": "Illustrative. A real value needs a two-point resistor ladder."
+    },
+    "carrier_intercept_uv": {
+      "value": 0.0,
+      "unit": "uV",
+      "provenance": "declared",
+      "note": "Illustrative zero. Do not assume a real board's intercept is zero -- that assumption is what a single-point calibration silently makes."
+    },
+    "analogue_pole_hz": {
+      "value": null,
+      "provenance": "declared",
+      "note": "None modelled. On a real board 'absent' is itself a measurement, not a default."
+    }
+  },
+  "firmware": {
+    "sample_rate_hz": {
+      "value": 500,
+      "unit": "Hz",
+      "provenance": "declared"
+    },
+    "modes": {
+      "eeg": {
+        "pga_gain": {
+          "value": 12,
+          "provenance": "declared"
+        },
+        "uv_scale_factor": {
+          "value": 1.0,
+          "unit": "uV per CSV unit",
+          "provenance": "declared",
+          "note": "Declared by the firmware author as already input-referred. Verify against a known differential input before trusting it; see conformance/test_profile_contract.py."
+        },
+        "carrier_present": {
+          "value": false,
+          "provenance": "declared"
+        }
+      },
+      "impedance": {
+        "pga_gain": {
+          "value": 1,
+          "provenance": "declared"
+        },
+        "uv_scale_factor": {
+          "value": 1.0,
+          "unit": "uV per CSV unit",
+          "provenance": "declared"
+        },
+        "carrier_present": {
+          "value": true,
+          "provenance": "declared"
+        }
+      }
+    },
+    "interference_lines_hz": {
+      "value": [],
+      "unit": "Hz",
+      "provenance": "declared",
+      "note": "Explicit list. MUST NOT be derived from the sample rate."
+    },
+    "mains_hz": {
+      "value": 50,
+      "unit": "Hz",
+      "provenance": "declared"
+    }
+  },
+  "montage": {
+    "channel_order": {
+      "value": [
+        "ch1",
+        "ch2",
+        "ch3",
+        "ch4",
+        "ch5",
+        "ch6",
+        "ch7",
+        "ch8"
+      ],
+      "provenance": "declared",
+      "note": "CSV column order. Readers select positionally; header labels are not evidence."
+    }
+  },
+  "conventions": {
+    "carrier_amplitude_convention": {
+      "value": "sine_rms",
+      "provenance": "closed-form",
+      "note": "The chip's sinc^3 decimation removes the injected square wave's harmonics, so the carrier arrives near-sinusoidal and the sine conversion is the physically correct one."
+    },
+    "analysis_rate_hz": {
+      "value": 125,
+      "unit": "Hz",
+      "provenance": "declared",
+      "note": "500/4. Integer factor from this device's source rate."
+    },
+    "band_edges_hz": {
+      "value": {
+        "delta": [
+          1,
+          4
+        ],
+        "theta": [
+          4,
+          8
+        ],
+        "alpha": [
+          8,
+          13
+        ],
+        "beta": [
+          13,
+          30
+        ],
+        "gamma": [
+          30,
+          45
+        ]
+      },
+      "provenance": "declared"
+    },
+    "epoch_seconds": {
+      "value": 2.0,
+      "unit": "s",
+      "provenance": "declared"
+    },
+    "epoch_gates": {
+      "value": {
+        "max_p2p_uv": 500.0,
+        "max_std_uv": 120.0,
+        "min_std_uv": 0.5,
+        "max_gradient_uv_per_sample": 80.0
+      },
+      "provenance": "declared",
+      "note": "PLACEHOLDER values for the synthetic reference device. Real thresholds must be derived from labelled artefact recordings on the device in question. A threshold tuned until the output looks reasonable has been fitted to the answer -- see spec/40-processing.md R-40.12."
+    }
+  }
+}

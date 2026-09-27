@@ -1,0 +1,19 @@
+{
+  "_comment": "Copy to patterns.local.json (gitignored) and fill in. Each entry is a Python regex and a reason shown when it matches. The file never enters the repository, because a list of the constants you are protecting is itself the thing you are protecting.",
+  "constants": [
+    {
+      "pattern": "\\\\b12\\\\.345\\\\b",
+      "why": "example: a slope fitted on your hardware"
+    }
+  ],
+  "identifiers": [
+    {
+      "pattern": "(?i)\\\\byour-org-name\\\\b",
+      "why": "example: organisation name"
+    },
+    {
+      "pattern": "(?i)\\\\bpatient[_-]?\\\\d{4,}",
+      "why": "example: patient code"
+    }
+  ]
+}
