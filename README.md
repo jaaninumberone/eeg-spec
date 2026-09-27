@@ -62,20 +62,6 @@ Device-specific values live in a private overlay — a profile JSON and its fixt
 this repo consumes and never contains. A profile is *data*, which is what makes the split
 clean rather than a compromise.
 
-`conformance/check_publishable.py` enforces it mechanically and is meant to fail CI. It
-asks **git** what would be published rather than walking the filesystem, because only the
-index answers the question that matters.
-
-It has now caught two classes of leak in this repository's own drafts. Six on its first
-run. Then, more usefully, itself: an earlier version held its pattern list inline and
-excluded itself from its own scan so as not to report findings against that list — which
-meant the list, a plaintext enumeration of exactly the constants it exists to keep out,
-would have shipped. Patterns now load from `conformance/patterns.local.json`, which is
-gitignored; see `patterns.example.json` for the shape.
-
-A guard that publishes what it guards is worse than no guard, because it reads as
-diligence.
-
 ## The specification
 
 [`spec/00-overview.md`](spec/00-overview.md) is the entry point.
